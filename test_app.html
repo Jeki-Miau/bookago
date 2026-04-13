@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="id" class="scroll-smooth">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Laravel</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <meta name="color-scheme" content="light only">
+    <meta name="darkreader-lock">
+
+    <!-- CSS / JS -->
+    <link rel="preload" as="style" href="http://localhost/build/assets/app-DPYrAS81.css" /><link rel="modulepreload" as="script" href="http://localhost/build/assets/app-BG1N8LkL.js" /><link rel="stylesheet" href="http://localhost/build/assets/app-DPYrAS81.css" data-navigate-track="reload" /><script type="module" src="http://localhost/build/assets/app-BG1N8LkL.js" data-navigate-track="reload"></script>    
+    <!-- Alpine.js -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+    <!-- Livewire Styles --><style >[wire\:loading][wire\:loading], [wire\:loading\.delay][wire\:loading\.delay], [wire\:loading\.list-item][wire\:loading\.list-item], [wire\:loading\.inline-block][wire\:loading\.inline-block], [wire\:loading\.inline][wire\:loading\.inline], [wire\:loading\.block][wire\:loading\.block], [wire\:loading\.flex][wire\:loading\.flex], [wire\:loading\.table][wire\:loading\.table], [wire\:loading\.grid][wire\:loading\.grid], [wire\:loading\.inline-flex][wire\:loading\.inline-flex] {display: none;}[wire\:loading\.delay\.none][wire\:loading\.delay\.none], [wire\:loading\.delay\.shortest][wire\:loading\.delay\.shortest], [wire\:loading\.delay\.shorter][wire\:loading\.delay\.shorter], [wire\:loading\.delay\.short][wire\:loading\.delay\.short], [wire\:loading\.delay\.default][wire\:loading\.delay\.default], [wire\:loading\.delay\.long][wire\:loading\.delay\.long], [wire\:loading\.delay\.longer][wire\:loading\.delay\.longer], [wire\:loading\.delay\.longest][wire\:loading\.delay\.longest] {display: none;}[wire\:offline][wire\:offline] {display: none;}[wire\:dirty]:not(textarea):not(input):not(select) {display: none;}:root {--livewire-progress-bar-color: #2299dd;}[x-cloak] {display: none !important;}[wire\:cloak] {display: none !important;}dialog#livewire-error::backdrop {background-color: rgba(0, 0, 0, .6);}</style>
+    <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+<script id="browser-logger-active">
+(function() {
+    const ENDPOINT = 'http://localhost/_boost/browser-logs';
+    const logQueue = [];
+    let flushTimeout = null;
+
+    console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
+
+    // Store original console methods
+    const originalConsole = {
+        log: console.log,
+        info: console.info,
+        error: console.error,
+        warn: console.warn,
+        table: console.table
+    };
+
+    // Helper to safely stringify values
+    function safeStringify(obj) {
+        const seen = new WeakSet();
+        return JSON.stringify(obj, (key, value) => {
+            if (typeof value === 'object' && value !== null) {
+                if (seen.has(value)) return '[Circular]';
+                seen.add(value);
+            }
+            if (value instanceof Error) {
+                return {
+                    name: value.name,
+                    message: value.message,
+                    stack: value.stack
+                };
+            }
+            return value;
+        });
+    }
+
+    // Batch and send logs
+    function flushLogs() {
+        if (logQueue.length === 0) return;
+
+        const batch = logQueue.splice(0, logQueue.length);
+
+        fetch(ENDPOINT, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ logs: batch })
+        }).catch(err => {
+            // Silently fail to avoid infinite loops
+            originalConsole.error('Failed to send logs:', err);
+        });
+    }
+
+    // Debounced flush (100ms)
+    function scheduleFlush() {
+        if (flushTimeout) clearTimeout(flushTimeout);
+        flushTimeout = setTimeout(flushLogs, 100);
+    }
+
+    // Intercept console methods
+    ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+        console[method] = function(...args) {
+            // Call original method
+            originalConsole[method].apply(console, args);
+
+            // Capture log data
+            try {
+                logQueue.push({
+                    type: method,
+                    timestamp: new Date().toISOString(),
+                    data: args.map(arg => {
+                        try {
+                            return typeof arg === 'object' ? JSON.parse(safeStringify(arg)) : arg;
+                        } catch (e) {
+                            return String(arg);
+                        }
+                    }),
+                    url: window.location.href,
+                    userAgent: navigator.userAgent
+                });
+
+                scheduleFlush();
+            } catch (e) {
+                // Fail silently
+            }
+        };
+    });
+
+    // Global error handlers for uncaught errors
+    const originalOnError = window.onerror;
+    window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
+        try {
+            logQueue.push({
+                type: 'uncaught_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: errorMsg,
+                    filename: url,
+                    lineno: lineNumber,
+                    colno: colNumber,
+                    error: error ? {
+                        name: error.name,
+                        message: error.message,
+                        stack: error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Call original handler if it exists
+        if (originalOnError && typeof originalOnError === 'function') {
+            return originalOnError(errorMsg, url, lineNumber, colNumber, error);
+        }
+
+        // Let the error continue to propagate
+        return false;
+    }
+    window.addEventListener('error', (event) => {
+        try {
+            logQueue.push({
+                type: 'window_error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: event.message,
+                    filename: event.filename,
+                    lineno: event.lineno,
+                    colno: event.colno,
+                    error: event.error ? {
+                        name: event.error.name,
+                        message: event.error.message,
+                        stack: event.error.stack
+                    } : null
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the error continue to propagate
+        return false;
+    });
+    window.addEventListener('unhandledrejection', (event) => {
+        try {
+            logQueue.push({
+                type: 'error',
+                timestamp: new Date().toISOString(),
+                data: [{
+                    message: 'Unhandled Promise Rejection',
+                    reason: event.reason instanceof Error ? {
+                        name: event.reason.name,
+                        message: event.reason.message,
+                        stack: event.reason.stack
+                    } : event.reason
+                }],
+                url: window.location.href,
+                userAgent: navigator.userAgent
+            });
+
+            scheduleFlush();
+        } catch (e) {
+            // Fail silently
+        }
+
+        // Let the rejection continue to propagate
+        return false;
+    });
+
+    // Flush on page unload
+    window.addEventListener('beforeunload', () => {
+        if (logQueue.length > 0) {
+            navigator.sendBeacon(ENDPOINT, JSON.stringify({ logs: logQueue }));
+        }
+    });
+})();
+</script>
+</head>
+<body class="bg-slate-50 text-brand-dark antialiased selection:bg-brand-lime selection:text-white" style="background-color: #f8fafc;">
+
+    <!-- White Theme Sidebar -->
+    <!-- Sidebar wrapper matching the Reference -->
+<aside
+    class="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 flex flex-col z-40 transform -translate-x-full md:translate-x-0 transition-transform duration-300 shadow-sm">
+    <!-- Header -->
+    <div class="h-16 flex items-center px-6 border-b border-gray-100">
+        <!-- Simple Logo -->
+        <a href="/" class="flex items-center space-x-2 px-2 group">
+            <div
+                class="w-8 h-8 rounded-md bg-brand-lime flex items-center justify-center transform group-hover:scale-105 transition shadow-sm">
+                <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M4 3a2 2 0 100 4h12a2 2 0 100-4H4z" />
+                    <path fill-rule="evenodd"
+                        d="M3 8h14v7a2 2 0 01-2 2H5a2 2 0 01-2-2V8zm5 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"
+                        clip-rule="evenodd" />
+                </svg>
+            </div>
+            <span
+                class="text-xl font-black tracking-tight text-brand-dark group-hover:text-brand-lime transition">BOOKAGO</span>
+        </a>
+    </div>
+
+    <!-- Navigation Area -->
+    <nav class="flex-1 overflow-y-auto py-6 px-4">
+        <ul>
+            <li class="mb-6 border-b border-gray-100 pb-4">
+                <a href="http://localhost"
+                    class="flex items-center px-3 py-2.5 rounded-xl text-gray-700 bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:text-brand-lime font-bold shadow-sm transition">
+                    <svg class="w-5 h-5 mr-3 text-brand-lime" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                        </path>
+                    </svg>
+                    Halaman Utama (Landing)
+                </a>
+            </li>
+
+            <li class="mb-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Koleksi Saya</p>
+                <a href="http://localhost/catalog"
+                    class="flex items-center px-3 py-2.5 rounded-xl transition text-gray-500 hover:text-brand-dark hover:bg-gray-50 font-semibold">
+                    <svg class="w-5 h-5 mr-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                        </path>
+                    </svg>
+                    Katalog Buku
+                </a>
+                <a href="http://localhost/saved"
+                    x-data="{
+                        count: 0,
+                        init() {
+                            const userId = 0;
+                            if (userId && window.firebaseHelpers) {
+                                window.firebaseHelpers.onSavedBooksChange(userId, (books) => {
+                                    this.count = books.length;
+                                });
+                            }
+                        }
+                    }"
+                    class="flex items-center px-3 py-2.5 mt-1 rounded-xl transition text-gray-500 hover:text-brand-dark hover:bg-gray-50 font-semibold">
+                    <svg class="w-5 h-5 mr-3 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                    </svg>
+                    Tersimpan
+                    <span x-show="count > 0" x-text="count" x-transition
+                        class="ml-auto text-[10px] font-black bg-brand-lime text-white w-5 h-5 rounded-full flex items-center justify-center"></span>
+                </a>
+            </li>
+
+            <li class="mt-8 mb-2">
+                <p class="px-3 text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">Kategori Utama</p>
+                <div class="space-y-1">
+                    <a href="http://localhost/search?q=Fiksi"
+                        class="flex items-center px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:text-brand-dark hover:bg-gray-50 transition"><span
+                            class="w-1.5 h-1.5 rounded-full bg-blue-500 mr-3"></span>Fiksi</a>
+                    <a href="http://localhost/search?q=Sains%20Teknik"
+                        class="flex items-center px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:text-brand-dark hover:bg-gray-50 transition"><span
+                            class="w-1.5 h-1.5 rounded-full bg-purple-500 mr-3"></span>Sains &amp; Teknik</a>
+                    <a href="http://localhost/search?q=Sejarah"
+                        class="flex items-center px-3 py-2 rounded-xl text-sm font-semibold text-gray-500 hover:text-brand-dark hover:bg-gray-50 transition"><span
+                            class="w-1.5 h-1.5 rounded-full bg-yellow-500 mr-3"></span>Sejarah</a>
+                </div>
+            </li>
+        </ul>
+
+    </nav>
+</aside>
+    <!-- Main Content Area Container -->
+    <div class="md:pl-64 flex flex-col min-h-screen transition-all duration-300 w-full bg-slate-50">
+        <!-- Bright White Navbar -->
+        <header
+    class="sticky top-0 z-30 w-full px-6 py-4 bg-white/80 backdrop-blur-md border-b border-gray-200 shadow-sm transition-all duration-300">
+    <div class="flex items-center justify-between mx-auto w-full">
+
+        <!-- Search Bar -->
+        <form action="http://localhost/search" method="GET"
+            class="flex items-center w-full max-w-lg bg-gray-50 border border-gray-200 rounded-full px-5 py-2.5 transition focus-within:ring-2 focus-within:ring-brand-lime shadow-sm">
+            <svg class="w-5 h-5 text-gray-400 flex-shrink-0 transition" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" name="q" placeholder="Cari judul, penulis, atau ISBN..."
+                class="w-full bg-transparent border-none focus:ring-0 text-brand-dark font-medium placeholder-gray-400 ml-3 text-sm">
+        </form>
+
+        <!-- Auth Navigation -->
+                        <div class="flex items-center space-x-4">
+                    <a href="http://localhost/login"
+                        class="text-sm font-bold text-gray-600 hover:text-brand-primary transition">Masuk</a>
+                    <a href="http://localhost/register"
+                        class="text-sm font-bold bg-brand-primary text-white px-5 py-2.5 rounded-full hover:bg-opacity-90 transition shadow-sm">Daftar</a>
+                </div>
+            
+        </div>
+</header>
+        <main class="flex-1 px-4 sm:px-6 py-8 overflow-x-hidden">
+            <div class="max-w-7xl mx-auto space-y-8 py-12 px-6">
+        <section class="space-y-6 pt-6">
+            <div class="flex items-center justify-between border-b border-gray-100 pb-4">
+                <h2 class="text-2xl font-extrabold flex items-center space-x-3">
+                    <span class="w-2 h-8 bg-brand-primary rounded-full inline-block shadow-sm"></span>
+                    <span class="text-brand-dark">Hasil Pencarian: <span class="text-brand-primary">"Chris Oxlade"</span></span>
+                </h2>
+                <a href="http://localhost/catalog" class="text-sm font-bold text-gray-500 hover:text-brand-dark transition inline-flex items-center">
+                    <svg class="mr-1 w-4 h-4 transform rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                    Kembali ke Katalog
+                </a>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6 pt-4">
+                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;paper-api-fa541c3e0e39897d9b9e0b77815291cf&quot;,&quot;title&quot;:&quot;Paper&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=4jNgmZuIkdYC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=4jNgmZuIkdYC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api"
+            alt="Paper"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/paper-api-fa541c3e0e39897d9b9e0b77815291cf"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Paper
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;judul-tidak-diketahui-api-95fdf0e1497ac15d0a62385b543ca010&quot;,&quot;title&quot;:&quot;Judul Tidak Diketahui&quot;,&quot;author&quot;:&quot;Penulis Tidak Diketahui&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=hAJnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=hAJnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Judul Tidak Diketahui"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/judul-tidak-diketahui-api-95fdf0e1497ac15d0a62385b543ca010"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Judul Tidak Diketahui
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Penulis Tidak Diketahui
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;how-we-use-paper-api-6ee85e88ef922e7cea59caedb110212c&quot;,&quot;title&quot;:&quot;How We Use Paper&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=aunF3DY1HXEC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=aunF3DY1HXEC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api"
+            alt="How We Use Paper"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/how-we-use-paper-api-6ee85e88ef922e7cea59caedb110212c"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                How We Use Paper
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;wood-api-246ad3937dcebc0591e881b578a3ba1f&quot;,&quot;title&quot;:&quot;Wood&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/ui-avatars.com\/api\/?name=Wood&amp;background=f8fafc&amp;color=0f172a&amp;size=400&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://ui-avatars.com/api/?name=Wood&amp;background=f8fafc&amp;color=0f172a&amp;size=400"
+            alt="Wood"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/wood-api-246ad3937dcebc0591e881b578a3ba1f"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Wood
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;be-a-tracker-api-14e53adbdfa02b14f3866cf50a27f292&quot;,&quot;title&quot;:&quot;Be a Tracker&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=4beLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=4beLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Be a Tracker"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/be-a-tracker-api-14e53adbdfa02b14f3866cf50a27f292"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Be a Tracker
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;be-a-survivor-api-d6d0ff902dc1c5de098ae9905b4ce608&quot;,&quot;title&quot;:&quot;Be a Survivor&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=C6GLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=C6GLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Be a Survivor"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/be-a-survivor-api-d6d0ff902dc1c5de098ae9905b4ce608"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Be a Survivor
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;be-an-adventurer-api-b505bbfb052fbd6045ae32e03b516beb&quot;,&quot;title&quot;:&quot;Be an Adventurer&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=waCLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=waCLCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Be an Adventurer"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/be-an-adventurer-api-b505bbfb052fbd6045ae32e03b516beb"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Be an Adventurer
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;screws-api-b325f0386b30e73a1aa99628b6f3cdd5&quot;,&quot;title&quot;:&quot;Screws&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=8H1VDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=8H1VDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Screws"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/screws-api-b325f0386b30e73a1aa99628b6f3cdd5"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Screws
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;rocks-api-21b38d6d1618f73ad68251a90f65e327&quot;,&quot;title&quot;:&quot;Rocks&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=pjqnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=pjqnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Rocks"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/rocks-api-21b38d6d1618f73ad68251a90f65e327"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Rocks
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;ramps-and-wedges-api-0982b462c37d307df57818c5f07f9a80&quot;,&quot;title&quot;:&quot;Ramps and Wedges&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=QvKJctzMNcQC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=QvKJctzMNcQC&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;source=gbs_api"
+            alt="Ramps and Wedges"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/ramps-and-wedges-api-0982b462c37d307df57818c5f07f9a80"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Ramps and Wedges
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;water-api-5f2022c23fc21b770c10ad1dce6e06f7&quot;,&quot;title&quot;:&quot;Water&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=05OhBAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=05OhBAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Water"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/water-api-5f2022c23fc21b770c10ad1dce6e06f7"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Water
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;gotcha-again-for-guys-api-b9960a5e6c087e62313056faa4da589b&quot;,&quot;title&quot;:&quot;Gotcha Again for Guys!&quot;,&quot;author&quot;:&quot;Kathleen A. Baxter, Marcia Agness Kochel&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=9ODEEAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=9ODEEAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Gotcha Again for Guys!"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/gotcha-again-for-guys-api-b9960a5e6c087e62313056faa4da589b"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Gotcha Again for Guys!
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Kathleen A. Baxter, Marcia Agness Kochel
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;mountains-api-f69d153e650de0ab723b230b244b7713&quot;,&quot;title&quot;:&quot;Mountains&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=Q8CnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=Q8CnDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Mountains"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/mountains-api-f69d153e650de0ab723b230b244b7713"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Mountains
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;volcanoes-api-9a9c18b9ad01eec060d767c74eadef1b&quot;,&quot;title&quot;:&quot;Volcanoes&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=TI5fEAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=TI5fEAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Volcanoes"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/volcanoes-api-9a9c18b9ad01eec060d767c74eadef1b"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Volcanoes
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;soil-api-fef6c802c45267cce8c39952706a770c&quot;,&quot;title&quot;:&quot;Soil&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=fjsvCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=fjsvCwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Soil"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/soil-api-fef6c802c45267cce8c39952706a770c"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Soil
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;the-history-of-telecommunications-api-fbfdd02fd43d9bbe6a349eebe6b84ecd&quot;,&quot;title&quot;:&quot;The History of Telecommunications&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=HZvaDgAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=HZvaDgAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="The History of Telecommunications"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/the-history-of-telecommunications-api-fbfdd02fd43d9bbe6a349eebe6b84ecd"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                The History of Telecommunications
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;electricity-api-574518ac5b24025a1b2d17faf14d93df&quot;,&quot;title&quot;:&quot;Electricity&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=RmShBAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=RmShBAAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Electricity"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/electricity-api-574518ac5b24025a1b2d17faf14d93df"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Electricity
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                                    <div x-data="{
+        hover: false,
+        saved: false,
+        saving: false,
+        userId: 0,
+        bookData: {&quot;slug&quot;:&quot;wheels-api-1dd4921693aad134fac7a6e8ea88740a&quot;,&quot;title&quot;:&quot;Wheels&quot;,&quot;author&quot;:&quot;Chris Oxlade&quot;,&quot;coverImage&quot;:&quot;https:\/\/books.google.com\/books\/content?id=7H1VDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api&quot;,&quot;previewUrl&quot;:null},
+        async toggleSave() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            this.saving = true;
+            try {
+                if (this.saved) {
+                    await window.firebaseHelpers.unsaveBook(this.userId, this.bookData.slug);
+                    this.saved = false;
+                } else {
+                    await window.firebaseHelpers.saveBook(this.userId, this.bookData);
+                    this.saved = true;
+                }
+            } catch (e) {
+                console.error('Firebase save error:', e);
+            }
+            this.saving = false;
+        },
+        async checkSaved() {
+            if (!this.userId || !window.firebaseHelpers) return;
+            try {
+                this.saved = await window.firebaseHelpers.isBookSaved(this.userId, this.bookData.slug);
+            } catch(e) {}
+        }
+    }" x-init="checkSaved()" @mouseenter="hover = true" @mouseleave="hover = false"
+    class="group relative flex flex-col bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer">
+
+    <!-- Cover Image -->
+    <div class="relative w-full aspect-[2/3] overflow-hidden bg-gray-50 border-b border-gray-100">
+        <img src="https://books.google.com/books/content?id=7H1VDwAAQBAJ&amp;printsec=frontcover&amp;img=1&amp;zoom=1&amp;edge=curl&amp;source=gbs_api"
+            alt="Wheels"
+            class="object-cover w-full h-full transition-transform duration-700 ease-out group-hover:scale-105"
+            loading="lazy">
+
+        <!-- Bookmark Button -->
+        
+        <!-- White overlay slideup -->
+        <div
+            class="absolute inset-x-0 bottom-0 top-1/2 bg-gradient-to-t from-white via-white/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-3 z-10">
+                            <a href="http://localhost/book/wheels-api-1dd4921693aad134fac7a6e8ea88740a"
+                    class="w-full text-center bg-brand-primary text-white text-xs font-bold py-2 rounded-xl shadow-md transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 ease-out delay-75 hover:bg-opacity-90">
+                    Lihat Detail
+                </a>
+                    </div>
+    </div>
+
+    <!-- Info -->
+    <div class="p-4 flex flex-col grow bg-white relative z-20">
+        <div class="flex items-start justify-between">
+            <h4 class="font-bold text-base text-brand-dark line-clamp-1 group-hover:text-brand-lime transition-colors">
+                Wheels
+            </h4>
+        </div>
+
+        <p class="text-[10px] font-semibold text-gray-400 mt-0.5 mb-2">
+            Oleh Chris Oxlade
+        </p>
+
+        <!-- Categories Chips -->
+        <div class="flex flex-wrap gap-1.5 mt-auto pt-3 border-t border-gray-50">
+                            <span
+                    class="text-[8px] font-black uppercase tracking-wider bg-brand-surface text-brand-primary px-2 py-1 rounded-md border border-gray-200">
+                    Fiksi Umum
+                </span>
+                    </div>
+    </div>
+</div>                            </div>
+        </section>
+    </div>
+        </main>
+    </div>
+
+    <!-- Livewire Scripts -->
+<script src="http://localhost/livewire-fcbdf322/livewire.js?id=698c71c1"   data-csrf="l76rTMtn6jGwEgm7YohKbctubApiqaeuiIoZ1dlz" data-module-url="http://localhost/livewire-fcbdf322" data-update-uri="http://localhost/livewire-fcbdf322/update" data-navigate-once="true"></script>
+</body>
+</html>
